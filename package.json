@@ -1,0 +1,56 @@
+{
+  "name": "my-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@nomiclabs/hardhat-etherscan": "^3.0.3",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "@openzeppelin/contracts": "^4.5.0",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^13.0.0",
+    "@testing-library/user-event": "^13.2.1",
+    "chai": "^4.3.6",
+    "dotenv": "^10.0.0",
+    "ethereum-waffle": "^3.4.4",
+    "hardhat": "^2.9.3",
+    "minimist": "^1.2.5",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.0",
+    "web3.storage": "^3.1.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "deploy-nft": "npx hardhat run scripts/deploy.mjs --network rinkeby",
+    "deploy-nft-dev": "npx hardhat run scripts/deploy.mjs --network localhost",
+    "deploy": "npx hardhat run scripts/deploy-ticket.mjs --network rinkeby",
+    "deploy-dev": "npx hardhat run scripts/deploy-ticket-dev.mjs --network localhost",
+    "ipfs1155": "node utils/metadataERC1155Generator.mjs",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.5",
+    "ethers": "^5.6.4"
+  }
+}
