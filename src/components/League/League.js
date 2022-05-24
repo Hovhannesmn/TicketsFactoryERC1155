@@ -67,7 +67,7 @@ function League() {
           // from: owner //@TODO when need to change owner msg.from address
         };
         const uri = await contract.uri(id)
-        const transaction = await contract.mint(owner, id, 1, options);
+        const transaction = await contract.mintByUSDC(owner, id, 1, options);
         await transaction.wait();
         const log = await provider.getTransactionReceipt(transaction.hash);
         debugger;
@@ -145,6 +145,7 @@ function League() {
           <th scope="col">Team Name</th>
           <th scope="col">ticket count</th>
           <th scope="col">buy ticket</th>
+          <th scope="col">buy ticket in $</th>
         </tr>
         </thead>
         <tbody>
@@ -161,6 +162,13 @@ function League() {
                     className="btn btn-primary"
                     onClick={() => mint(key)}
                   >buy ticket</button>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => mint(key)}
+                  >buy ticket USD</button>
                 </td>
               </tr>
             </>

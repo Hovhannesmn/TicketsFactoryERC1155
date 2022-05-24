@@ -14,15 +14,20 @@ const basePath = process.cwd();
         console.error(err);
         return;
       }
-      console.log('ArmenianLeagueTickets is: ', baseURLLeague);
+      const MyUSDToken = await hre.ethers.getContractFactory("MyUSDToken");
+      const myUSDToken = await MyUSDToken.deploy();
+      await myUSDToken.deployed();
+      const myUSDTokenJSON = {
+        address: myUSDToken.address,
+        abi: JSON.parse(myUSDToken.interface.format('json'))
+      };
+      fs.writeFileSync('./src/myUSDToken.deployed.json', JSON.stringify(myUSDTokenJSON));
+
+
       const ArmenianLeagueTickets = await hre.ethers.getContractFactory("ArmenianLeagueTickets");
-
-      // const MyUSDToken = await hre.ethers.getContractFactory("MyUSDToken");
-      // const myUSDToken = await MyUSDToken.deploy(); //uncomment when need to update MyUSDToken contract
-      const TokenOFUSDToken = "0x9639FC02d13E9AfC67177aC78424628cfFFDa9e8";
-      const armenianLeagueTickets = await ArmenianLeagueTickets.deploy();
-
+      const armenianLeagueTickets = await ArmenianLeagueTickets.deploy(myUSDToken.address);
       await armenianLeagueTickets.deployed();
+
       const dataArmenianLeagueTicketsFactory = {
         address: armenianLeagueTickets.address,
         baseUrl: baseURLLeague,
@@ -30,6 +35,8 @@ const basePath = process.cwd();
       };
       fs.writeFileSync('./src/ArmenianLeagueTicketsFactory.deployed.json',
         JSON.stringify(dataArmenianLeagueTicketsFactory));
+
+      await myUSDToken.transfer(armenianLeagueTickets.address, '1000000000000000000000000');
 
       console.log("ArmenianLeagueTicketsFactory deployed to:", dataArmenianLeagueTicketsFactory.address);
     });

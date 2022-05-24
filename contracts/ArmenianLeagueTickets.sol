@@ -4,18 +4,30 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./MyUSDToken.sol";
 
 contract ArmenianLeagueTickets is ERC1155, Ownable {
     string public name;
     string public symbol;
     uint256 public cost = 0.01 ether;
+    uint256 public USDCCost = 0.00052 ether;
     uint private constant MAX_TEAM_ID = 9;
+    uint public rate = 100;
+    MyUSDToken public mysUSDToken;
+
+    event TokenPurchased(
+        address account,
+        address token,
+        uint amount,
+        uint rate
+    );
 
     mapping(uint => string) public tokenURI;
 
-    constructor() ERC1155("") {
+    constructor(MyUSDToken _mysUSDToken) ERC1155("") {
         name = "ArmenianPremierLeague";
         symbol = "ArmenianPremierLeague";
+        mysUSDToken = _mysUSDToken;
     }
 
     modifier checkCost() {
@@ -23,10 +35,32 @@ contract ArmenianLeagueTickets is ERC1155, Ownable {
         _;
     }
 
+    modifier checkCostUSD() {
+        require(msg.value == USDCCost, "amount should be equal the cost");
+
+        _;
+    }
+
     function mint(address _to, uint _id, uint _amount) external payable checkCost  {
         if (_id < 0 || _id > MAX_TEAM_ID) {
             require(false, "Wrong team parameter");
         }
+        _mint(_to, _id, _amount, "");
+    }
+
+    function mintByUSDC(address _to, uint _id, uint _amount) external payable checkCostUSD {
+        if (_id < 0 || _id > MAX_TEAM_ID) {
+            require(false, "Wrong team parameter");
+        }
+
+        uint tokenAmount = msg.value * rate;
+
+//        require(myUSDToken.balanceOf(address (this)) >= tokenAmount, "address (this)) >= tokenAmount which is wrong");
+//        myUSDToken.transfer(msg.sender, tokenAmount);
+
+        emit TokenPurchased(msg.sender, address(mysUSDToken), tokenAmount, rate);
+
+
         _mint(_to, _id, _amount, "");
     }
 
