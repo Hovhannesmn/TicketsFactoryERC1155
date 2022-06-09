@@ -21,19 +21,22 @@ function League() {
     USDCBalance: '',
     soldByUSDCBalance: '',
     ticketCounts: [],
+    soldTickets: [],
   });
   const [error, setError] = useState("");
 
   const {token, contract, owner, networkName, provider} = contractData;
-  const {cost, balance, USDCBalance, soldByUSDCBalance, ticketCounts} = contractInfo;
+  const {cost, balance, USDCBalance, soldByUSDCBalance, ticketCounts, soldTickets} = contractInfo;
 
   const mint = async (id) => {
       try {
+        // const mintTransaction = await token.mint();
+        // await mintTransaction.wait();
         const uri = await contract.uri(id)
-        const transactionApprove = await token.approve(ArmenianLeagueTicketsFactoryRinkeby.address, 30);
+        const transactionApprove = await token.approve(ArmenianLeagueTicketsFactoryRinkeby.address, 300);
         await transactionApprove.wait();
         debugger;
-        const transaction = await contract.mintByUSDC(owner, id, 30);
+        const transaction = await contract.mintByUSDC(owner, id, 6);
         await transaction.wait();
         const log = await provider.getTransactionReceipt(transaction.hash);
         debugger;
@@ -107,6 +110,8 @@ function League() {
       Array.from({ length: 10 }, (v, k) => k)
     );
 
+    const soldTickets = await contract.balanceOfTickets();
+    debugger;
     const costHexadecimal = await contract.cost();
     const balance = await provider.getBalance(owner);
 
@@ -116,6 +121,7 @@ function League() {
       soldByUSDCBalance: parseInt(soldByUSDCBalance, 16),
       balance: ethers.utils.formatEther(balance),
       ticketCounts: batches.map(item => parseInt(item, 16)),
+      soldTickets: soldTickets.map(item => parseInt(item, 16)),
     });
   }
 
@@ -148,7 +154,8 @@ function League() {
         <tr>
           <th scope="col">#</th>
           <th scope="col">Team Name</th>
-          <th scope="col">ticket count</th>
+          <th scope="col">My ticket count</th>
+          <th scope="col">Sold Ticket count</th>
           <th scope="col">buy ticket</th>
           <th scope="col">buy ticket in $</th>
         </tr>
@@ -160,19 +167,20 @@ function League() {
               <tr>
                 <th scope="row">{++key}</th>
                 <td>{val.name}</td>
-                <td>{ticketCounts[val.id]}</td>
+                <td>{ticketCounts[val.id] ?? '-'}</td>
+                <td>{soldTickets[val.id] ?? '-'}</td>
                 <td>
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => mint(key)}
+                    onClick={() => mint(val.id)}
                   >buy ticket</button>
                 </td>
                 <td>
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => mint(key)}
+                    onClick={() => mint(val.id)}
                   >buy ticket USDC</button>
                 </td>
               </tr>

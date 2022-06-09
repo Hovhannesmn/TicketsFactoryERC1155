@@ -20,7 +20,7 @@ module.exports = {
     },
     rinkeby: {
       url: "https://eth-rinkeby.alchemyapi.io/v2/VQu1SPhPXOGss4gbh_NuIPcRvadikkpo",
-      accounts: [`0x${'fbccbe2e52936444c1818f5307f1fd1501650dce75ae821f2c073ca6727ae11a'}`]
+      accounts: [`0x${'fbccbe2e52936444c1818f5307f1fd1501650dce75ae821f2c073ca6727ae11a'}`, `0x${'59a9abbbc73ae5f2206eda3c24e30aa7ccc28bababcb82b3f83a51a9329f4449'}`]
     },
     localhost: {
       url: "http://localhost:8545",

@@ -15,6 +15,7 @@ contract ArmenianLeagueTickets is ERC1155, Ownable {
     uint private constant MAX_TEAM_ID = 9;
     uint public rate = 100;
     MyUSDToken public mysUSDToken;
+    mapping(uint64 => uint256) private ticketBalances;
 
     event TokenPurchased(
         address account,
@@ -25,14 +26,41 @@ contract ArmenianLeagueTickets is ERC1155, Ownable {
 
     mapping(uint => string) public tokenURI;
 
+    function balanceTickets(uint64 _id) public view returns (uint256) {
+        return ticketBalances[_id];
+    }
+
+    /**
+     * @dev See {IERC1155-balanceOfBatch}.
+     *
+     * Requirements:
+     *
+     * - `accounts` and `ids` must have the same length.
+     */
+    function balanceOfTickets()
+    public
+    view
+    returns (uint256[] memory)
+    {
+        uint256[] memory batchBalances = new uint256[](10);
+
+        for (uint64 i = 0; i < 9; ++i) {
+            batchBalances[i] = balanceTickets(i);
+        }
+
+        return batchBalances;
+    }
+
+
     constructor(MyUSDToken _mysUSDToken) ERC1155("") {
         name = "ArmenianPremierLeague";
         symbol = "ArmenianPremierLeague";
         mysUSDToken = _mysUSDToken;
     }
 
-    modifier checkCost() {
-        require(msg.value == cost, "amount should be equal cost");
+    modifier checkCost(uint256 amount) {
+        require(msg.value / cost == amount, "amount should be equal cost");
+
         _;
     }
 
@@ -42,24 +70,39 @@ contract ArmenianLeagueTickets is ERC1155, Ownable {
         _;
     }
 
-    modifier checkTeamAvailability(uint64 id) {
+    modifier checkTicketsAvailability(uint64 id, uint256 amount) {
         if (id < 0 || id > MAX_TEAM_ID) {
             require(false, "Wrong team parameter");
+        }
+
+        if (ticketBalances[id] + amount > 10) {
+            require(false, "The amount of tickets is not available");
         }
 
         _;
     }
 
-    function mint(address _to, uint64 _id, uint256 _amount) external payable checkCost checkTeamAvailability(_id)  {
+    function mint(address _to, uint64 _id, uint256 _amount)
+    external
+    payable
+    checkCost(_amount)
+    checkTicketsAvailability(_id, _amount)
+    {
         _mint(_to, _id, _amount, "");
+        ticketBalances[_id] += _amount;
     }
 
-    function mintByUSDC(address _to, uint _id, uint _amount) external payable checkCostUSDC(_amount) {
+    function mintByUSDC(address _to, uint64 _id, uint256 _amount)
+    external
+    payable
+    checkTicketsAvailability(_id, _amount)
+    {
         console.log("Sender address is %s tokens", address(this));
 
-        mysUSDToken.transferFrom(msg.sender, address(this), _amount);
+        mysUSDToken.transferFrom(msg.sender, address(this), _amount * USDCCost);
 
-        _mint(_to, _id, 1, "");
+        _mint(_to, _id, _amount, "");
+        ticketBalances[_id] += _amount;
     }
 
     function mintBatch(address _to, uint[] memory _ids, uint[] memory _amounts) external onlyOwner {
