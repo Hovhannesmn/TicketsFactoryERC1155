@@ -22,11 +22,10 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "deploy-nft": "npx hardhat run scripts/deploy.mjs --network rinkeby",
-    "deploy-nft-dev": "npx hardhat run scripts/deploy.mjs --network localhost",
     "deploy": "npx hardhat run scripts/deploy-ticket.mjs --network rinkeby",
     "deploy-dev": "npx hardhat run scripts/deploy-ticket-dev.mjs --network localhost",
     "ipfs1155": "node utils/metadataERC1155Generator.mjs",
+    "publish": "npx hardhat verify 0xcA92eE8A60908148670a206343AD225a850f2833 --network rinkeby",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

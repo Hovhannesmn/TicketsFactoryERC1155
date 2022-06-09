@@ -1,76 +1,44 @@
 import {ethers} from "ethers"
+import React from "react";
 import {useEffect, useState} from "react";
 import "./Legue.css";
+import {TEAMS} from "./constants";
 import ArmenianLeagueTicketsFactoryRinkeby from "../../ArmenianLeagueTicketsFactory.deployed.json";
+import MyUSDToken from "../../myUSDToken.deployed.json";
 import ArmenianLeagueTicketsFactoryDev from "../../ArmenianLeagueTicketsFactory.deployed-dev.json";
 
-
-const TEAMS = [
-  {
-    id: '0',
-    name: 'Shirak',
-  },
-  {
-    id: '1',
-    name: 'Bananc',
-  },
-  {
-    id: '2',
-    name: 'Pyunik',
-  },
-  {
-    id: '3',
-    name: 'Alashkert',
-  },
-  {
-    id: '4',
-    name: 'Ararat',
-  },
-  {
-    id: '5',
-    name: 'Real Madrid',
-  },
-  {
-    id: '6',
-    name: 'Ganzasar',
-  },
-  {
-    id: '7',
-    name: 'Lori',
-  },
-  {
-    id: '8',
-    name: 'Mika',
-  },
-  {
-    id: '9',
-    name: 'Ulic',
-  },
-];
 
 function League() {
   const [contractData, setContractData] = useState({
     owner: '',
+    token: {},
     contract: {},
     provider: {},
+  });
+  const [contractInfo, setContractInfo] = useState({
     balance: '',
     cost: '',
+    USDCBalance: '',
+    soldByUSDCBalance: '',
+    ticketCounts: [],
   });
   const [error, setError] = useState("");
 
-  const {contract, owner, cost, balance, networkName, provider} = contractData;
+  const {token, contract, owner, networkName, provider} = contractData;
+  const {cost, balance, USDCBalance, soldByUSDCBalance, ticketCounts} = contractInfo;
 
   const mint = async (id) => {
       try {
-        const options = {
-          value: ethers.utils.parseEther("0.01"),
-          // from: owner //@TODO when need to change owner msg.from address
-        };
         const uri = await contract.uri(id)
-        const transaction = await contract.mintByUSDC(owner, id, 1, options);
+        const transactionApprove = await token.approve(ArmenianLeagueTicketsFactoryRinkeby.address, 30);
+        await transactionApprove.wait();
+        debugger;
+        const transaction = await contract.mintByUSDC(owner, id, 30);
         await transaction.wait();
         const log = await provider.getTransactionReceipt(transaction.hash);
         debugger;
+
+
 
         console.log("log is ", log.logs);
         // setError(log.logs.toString());
@@ -80,7 +48,7 @@ function League() {
           transactionSetURI.wait();
           setError('');
         }
-        await initialConnection();
+        await updateContractInfo();
       } catch (e) {
         setError(e.data !== undefined ? e.data.message : e.message);
       }
@@ -99,21 +67,56 @@ function League() {
         singer
       );
 
+
+      const token = new ethers.Contract(
+        MyUSDToken.address,
+        MyUSDToken.abi,
+        singer
+      );
+
+      // const trans = await TokenContract.transfer(TokenContract.address, 1000000);
+      // await trans.wait();
+
       const costHexadecimal = await contract.cost();
-      const balance = await provider.getBalance(data[0]);
-      debugger;
 
       setContractData({
         contract,
+        token,
         provider,
         networkName: network.name,
         owner: data[0],
-        cost: ethers.utils.formatEther(costHexadecimal),
-        balance: ethers.utils.formatEther(balance),
       });
+
+      await updateContractInfo(provider, token, contract, data[0]);
     } else {
       console.log("Your browser does not support metamask. Please use other browser");
     }
+  }
+
+  const updateContractInfo = async (
+    provider = contractData.provider,
+    token = contractData.token,
+    contract = contractData.contract,
+    owner = contractData.owner,
+  ) => {
+    const senderUSDCBalance = await token.balanceOf(owner);
+    const soldByUSDCBalance = await token.balanceOf(ArmenianLeagueTicketsFactoryRinkeby.address);
+
+    const batches = await contract.balanceOfBatch(
+      Array(10).fill(owner),
+      Array.from({ length: 10 }, (v, k) => k)
+    );
+
+    const costHexadecimal = await contract.cost();
+    const balance = await provider.getBalance(owner);
+
+    setContractInfo({
+      cost: ethers.utils.formatEther(costHexadecimal),
+      USDCBalance: parseInt(senderUSDCBalance, 16),
+      soldByUSDCBalance: parseInt(soldByUSDCBalance, 16),
+      balance: ethers.utils.formatEther(balance),
+      ticketCounts: batches.map(item => parseInt(item, 16)),
+    });
   }
 
   const withdraw = async () => {
@@ -121,7 +124,7 @@ function League() {
       const withdraw = await contract.withdraw();
       await withdraw.wait()
 
-      await initialConnection();
+      await updateContractInfo();
       setError('');
     } catch (e) {
       setError(e.data !== undefined ? e.data.message : e.message);
@@ -135,8 +138,10 @@ function League() {
 
   return (
     <div className="App">
-      <h3>Ticket cost is: {cost} Ether</h3>
-      <h3>Ticket cost is: {balance} Ether</h3>
+      <h5>Your Ether balance is: {balance} Ether</h5>
+      <h5>Your USDC balance is: {USDCBalance}$</h5>
+      <h5>Sold tickets by USDC balance is: {soldByUSDCBalance}$</h5>
+      <h5>Ticket cost is: {cost} Ether OR 30USDC Token</h5>
       <p style={{color: 'red'}}>{error}</p>
       <table className="table">
         <thead>
@@ -151,11 +156,11 @@ function League() {
         <tbody>
         {
           TEAMS.map((val, key) => (
-            <>
+            <React.Fragment key={key}>
               <tr>
                 <th scope="row">{++key}</th>
                 <td>{val.name}</td>
-                <td>0</td>
+                <td>{ticketCounts[val.id]}</td>
                 <td>
                   <button
                     type="button"
@@ -168,10 +173,10 @@ function League() {
                     type="button"
                     className="btn btn-primary"
                     onClick={() => mint(key)}
-                  >buy ticket USD</button>
+                  >buy ticket USDC</button>
                 </td>
               </tr>
-            </>
+            </React.Fragment>
           ))
         }
         </tbody>

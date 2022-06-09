@@ -41,4 +41,6 @@ npx hardhat test
 npx hardhat node
 node scripts/script.js
 npx hardhat help
+npx hardhat verify --contract contracts/MyUSDToken.sol:MyUSDToken --network rinkeby $contractHesh 
+
 ```

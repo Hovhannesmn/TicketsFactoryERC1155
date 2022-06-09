@@ -36,7 +36,7 @@ const basePath = process.cwd();
       fs.writeFileSync('./src/ArmenianLeagueTicketsFactory.deployed.json',
         JSON.stringify(dataArmenianLeagueTicketsFactory));
 
-      await myUSDToken.transfer(armenianLeagueTickets.address, '1000000000000000000000000');
+      // await myUSDToken.transfer(armenianLeagueTickets.address, '1000000000000000000000000');
 
       console.log("ArmenianLeagueTicketsFactory deployed to:", dataArmenianLeagueTicketsFactory.address);
     });
