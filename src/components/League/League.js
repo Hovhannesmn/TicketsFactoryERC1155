@@ -15,6 +15,7 @@ function League() {
     contract: {},
     provider: {},
   });
+  const [amount, setAmount] = useState(Array(10).fill(0));
   const [contractInfo, setContractInfo] = useState({
     balance: '',
     cost: '',
@@ -29,30 +30,36 @@ function League() {
   const {cost, balance, USDCBalance, soldByUSDCBalance, ticketCounts, soldTickets} = contractInfo;
 
   const mint = async (id) => {
-      try {
-        // const mintTransaction = await token.mint();
-        // await mintTransaction.wait();
+    setError('');
+
+    try {
+        if (amount[id] === 0) {
+          alert("cannot be 0");
+          return;
+        } else if (Number.isInteger(amount[id])) {
+          alert("amount should be integer");
+          return;
+        }
+
         const uri = await contract.uri(id)
-        const transactionApprove = await token.approve(ArmenianLeagueTicketsFactoryRinkeby.address, 300);
+        const transactionApprove = await token.approve(ArmenianLeagueTicketsFactoryRinkeby.address, 100);
         await transactionApprove.wait();
-        debugger;
-        const transaction = await contract.mintByUSDC(owner, id, 6);
+        const transaction = await contract.mintByUSDC(owner, id, amount[id]);
         await transaction.wait();
         const log = await provider.getTransactionReceipt(transaction.hash);
-        debugger;
-
-
 
         console.log("log is ", log.logs);
         // setError(log.logs.toString());
+        await updateContractInfo();
 
         if (!uri && networkName === 'rinkeby') {
           const transactionSetURI = await contract.setURI(id, `${ArmenianLeagueTicketsFactoryRinkeby.baseUrl + id}`)
           transactionSetURI.wait();
           setError('');
+          await updateContractInfo();
         }
-        await updateContractInfo();
       } catch (e) {
+        await updateContractInfo();
         setError(e.data !== undefined ? e.data.message : e.message);
       }
   }
@@ -156,6 +163,7 @@ function League() {
           <th scope="col">Team Name</th>
           <th scope="col">My ticket count</th>
           <th scope="col">Sold Ticket count</th>
+          <th scope="col">Amount</th>
           <th scope="col">buy ticket</th>
           <th scope="col">buy ticket in $</th>
         </tr>
@@ -170,16 +178,27 @@ function League() {
                 <td>{ticketCounts[val.id] ?? '-'}</td>
                 <td>{soldTickets[val.id] ?? '-'}</td>
                 <td>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => mint(val.id)}
-                  >buy ticket</button>
+                  <input
+                    value={amount[val.id]}
+                    className="inputAmount"
+                    type="number"
+                    onChange={e => setAmount((prev) => {
+                      prev[val.id] = e.target.value;
+                      return [...prev];
+                    })}
+                            placeholder="amount" />
                 </td>
                 <td>
                   <button
                     type="button"
                     className="btn btn-primary"
+                    onClick={() => mint(val.id)}
+                  >buy ticket Ether</button>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    className="btn btn-success"
                     onClick={() => mint(val.id)}
                   >buy ticket USDC</button>
                 </td>

@@ -13,6 +13,7 @@ contract ArmenianLeagueTickets is ERC1155, Ownable {
     uint256 public cost = 0.01 ether;
     uint256 public USDCCost = 30;
     uint private constant MAX_TEAM_ID = 9;
+    uint256 public MAX_TICKET_NUMBER = 1000;
     uint public rate = 100;
     MyUSDToken public mysUSDToken;
     mapping(uint64 => uint256) private ticketBalances;
@@ -30,13 +31,6 @@ contract ArmenianLeagueTickets is ERC1155, Ownable {
         return ticketBalances[_id];
     }
 
-    /**
-     * @dev See {IERC1155-balanceOfBatch}.
-     *
-     * Requirements:
-     *
-     * - `accounts` and `ids` must have the same length.
-     */
     function balanceOfTickets()
     public
     view
@@ -64,18 +58,12 @@ contract ArmenianLeagueTickets is ERC1155, Ownable {
         _;
     }
 
-    modifier checkCostUSDC(uint256 amount) {
-        require(amount == USDCCost, "amount should be equal the cost");
-
-        _;
-    }
-
     modifier checkTicketsAvailability(uint64 id, uint256 amount) {
         if (id < 0 || id > MAX_TEAM_ID) {
             require(false, "Wrong team parameter");
         }
 
-        if (ticketBalances[id] + amount > 10) {
+        if (ticketBalances[id] + amount > MAX_TICKET_NUMBER) {
             require(false, "The amount of tickets is not available");
         }
 
@@ -100,7 +88,6 @@ contract ArmenianLeagueTickets is ERC1155, Ownable {
         console.log("Sender address is %s tokens", address(this));
 
         mysUSDToken.transferFrom(msg.sender, address(this), _amount * USDCCost);
-
         _mint(_to, _id, _amount, "");
         ticketBalances[_id] += _amount;
     }

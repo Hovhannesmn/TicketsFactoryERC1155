@@ -8,6 +8,13 @@
     padding: 10px;
 }
 
+.inputAmount {
+    width: 40%;
+    /*height: 32px;*/
+    /*font-size: 20px;*/
+    /*padding: 6px;*/
+}
+
 .buttonSuccess {
     width: 100px;
     font-size: 20px;
