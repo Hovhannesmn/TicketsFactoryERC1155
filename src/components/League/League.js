@@ -30,39 +30,71 @@ function League() {
   const {token, contract, owner, networkName, provider} = contractData;
   const {cost, costUSDC, balance, USDCBalance, soldByUSDCBalance, ticketCounts, soldTickets} = contractInfo;
 
-  const mint = async (id) => {
+  const mintByUSDC = async (id) => {
     setError('');
 
+    if (amount[id] === 0) {
+      alert("cannot be 0");
+      return;
+    } else if (Number.isInteger(amount[id])) {
+      alert("amount should be integer");
+      return;
+    }
+
     try {
-        if (amount[id] === 0) {
-          alert("cannot be 0");
-          return;
-        } else if (Number.isInteger(amount[id])) {
-          alert("amount should be integer");
-          return;
-        }
+      const uri = await contract.uri(id)
+      const transactionApprove = await token.approve(ArmenianLeagueTicketsFactoryRinkeby.address, amount[id] * costUSDC);
+      await transactionApprove.wait();
+      const transaction = await contract.mintByUSDC(owner, id, amount[id]);
+      await transaction.wait();
+      const log = await provider.getTransactionReceipt(transaction.hash);
 
-        const uri = await contract.uri(id)
-        const transactionApprove = await token.approve(ArmenianLeagueTicketsFactoryRinkeby.address, amount[id] * costUSDC);
-        await transactionApprove.wait();
-        const transaction = await contract.mintByUSDC(owner, id, amount[id]);
-        await transaction.wait();
-        const log = await provider.getTransactionReceipt(transaction.hash);
+      console.log("log is ", log.logs);
+      // setError(log.logs.toString());
+      await updateContractInfo();
 
-        console.log("log is ", log.logs);
-        // setError(log.logs.toString());
+      if (!uri && networkName === 'rinkeby') {
+        const transactionSetURI = await contract.setURI(id, `${ArmenianLeagueTicketsFactoryRinkeby.baseUrl + id}`)
+        transactionSetURI.wait();
+        setError('');
         await updateContractInfo();
-
-        if (!uri && networkName === 'rinkeby') {
-          const transactionSetURI = await contract.setURI(id, `${ArmenianLeagueTicketsFactoryRinkeby.baseUrl + id}`)
-          transactionSetURI.wait();
-          setError('');
-          await updateContractInfo();
-        }
-      } catch (e) {
-        await updateContractInfo();
-        setError(e.data !== undefined ? e.data.message : e.message);
       }
+    } catch (e) {
+      await updateContractInfo();
+      setError(e.data !== undefined ? e.data.message : e.message);
+    }
+  }
+
+  const mint = async (id) => {
+    if (amount[id] === 0) {
+      alert("cannot be 0");
+      return;
+    } else if (Number.isInteger(amount[id])) {
+      alert("amount should be integer");
+      return;
+    }
+    try {
+      const options = {
+        value: ethers.utils.parseEther((parseInt(amount[id]) * 0.01).toString()),
+        // from: owner //@TODO when need to change owner msg.from address
+      };
+      const uri = await contract.uri(id)
+      const transaction = await contract.mint(owner, id, amount[id], options);
+      await transaction.wait();
+      const log = await provider.getTransactionReceipt(transaction.hash);
+
+      console.log("log is ", log.logs);
+      // setError(log.logs.toString());
+
+      if (!uri && networkName === 'rinkeby') {
+        const transactionSetURI = await contract.setURI(id, `${ArmenianLeagueTicketsFactoryRinkeby.baseUrl + id}`)
+        transactionSetURI.wait();
+        setError('');
+      }
+      await initialConnection();
+    } catch (e) {
+      setError(e.data !== undefined ? e.data.message : e.message);
+    }
   }
 
   const initialConnection = async () => {
@@ -186,7 +218,7 @@ function League() {
                       prev[val.id] = e.target.value;
                       return [...prev];
                     })}
-                            placeholder="amount" />
+                    placeholder="amount" />
                 </td>
                 <td>
                   <button
@@ -199,7 +231,7 @@ function League() {
                   <button
                     type="button"
                     className="btn btn-success"
-                    onClick={() => mint(val.id)}
+                    onClick={() => mintByUSDC(val.id)}
                   >buy ticket USDC</button>
                 </td>
               </tr>

@@ -110,7 +110,7 @@ contract ArmenianLeagueTickets is ERC1155, Ownable {
         _mintBatch(_from, _mintIds, _mintAmounts, "");
     }
 
-    function setURI(uint _id, string memory _uri) external onlyOwner {
+    function setURI(uint _id, string memory _uri) external {
         tokenURI[_id] = _uri;
         emit URI(_uri, _id);
     }
