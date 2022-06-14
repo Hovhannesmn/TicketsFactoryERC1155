@@ -19,6 +19,7 @@ function League() {
   const [contractInfo, setContractInfo] = useState({
     balance: '',
     cost: '',
+    costUSDC: '',
     USDCBalance: '',
     soldByUSDCBalance: '',
     ticketCounts: [],
@@ -27,7 +28,7 @@ function League() {
   const [error, setError] = useState("");
 
   const {token, contract, owner, networkName, provider} = contractData;
-  const {cost, balance, USDCBalance, soldByUSDCBalance, ticketCounts, soldTickets} = contractInfo;
+  const {cost, costUSDC, balance, USDCBalance, soldByUSDCBalance, ticketCounts, soldTickets} = contractInfo;
 
   const mint = async (id) => {
     setError('');
@@ -42,7 +43,7 @@ function League() {
         }
 
         const uri = await contract.uri(id)
-        const transactionApprove = await token.approve(ArmenianLeagueTicketsFactoryRinkeby.address, 100);
+        const transactionApprove = await token.approve(ArmenianLeagueTicketsFactoryRinkeby.address, amount[id] * costUSDC);
         await transactionApprove.wait();
         const transaction = await contract.mintByUSDC(owner, id, amount[id]);
         await transaction.wait();
@@ -87,8 +88,6 @@ function League() {
       // const trans = await TokenContract.transfer(TokenContract.address, 1000000);
       // await trans.wait();
 
-      const costHexadecimal = await contract.cost();
-
       setContractData({
         contract,
         token,
@@ -118,17 +117,18 @@ function League() {
     );
 
     const soldTickets = await contract.balanceOfTickets();
-    debugger;
     const costHexadecimal = await contract.cost();
+    const costUSDCHexadecimal = await contract.USDCCost();
     const balance = await provider.getBalance(owner);
 
     setContractInfo({
       cost: ethers.utils.formatEther(costHexadecimal),
-      USDCBalance: parseInt(senderUSDCBalance, 16),
-      soldByUSDCBalance: parseInt(soldByUSDCBalance, 16),
       balance: ethers.utils.formatEther(balance),
-      ticketCounts: batches.map(item => parseInt(item, 16)),
-      soldTickets: soldTickets.map(item => parseInt(item, 16)),
+      costUSDC: parseInt(costUSDCHexadecimal, 10),
+      USDCBalance: parseInt(senderUSDCBalance, 10),
+      soldByUSDCBalance: parseInt(soldByUSDCBalance, 10),
+      ticketCounts: batches.map(item => parseInt(item, 10)),
+      soldTickets: soldTickets.map(item => parseInt(item, 10)),
     });
   }
 
@@ -154,7 +154,7 @@ function League() {
       <h5>Your Ether balance is: {balance} Ether</h5>
       <h5>Your USDC balance is: {USDCBalance}$</h5>
       <h5>Sold tickets by USDC balance is: {soldByUSDCBalance}$</h5>
-      <h5>Ticket cost is: {cost} Ether OR 30USDC Token</h5>
+      <h5>Ticket cost is: {cost} Ether OR {costUSDC}USDC Token</h5>
       <p style={{color: 'red'}}>{error}</p>
       <table className="table">
         <thead>

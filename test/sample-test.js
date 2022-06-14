@@ -1,19 +1,54 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("Greeter", function () {
-  it("Should return the new greeting once it's changed", async function () {
-    const Greeter = await ethers.getContractFactory("Greeter");
-    const greeter = await Greeter.deploy("Hello, world!");
-    await greeter.deployed();
+describe("Token Contract", function () {
+  let Token, token, singer, Tickets, tickets, owner, address1, address2;
 
-    expect(await greeter.greet()).to.equal("Hello, world!");
+  beforeEach(async () => {
+    Token = await ethers.getContractFactory('MyUSDToken');
+    token = await Token.deploy();
+    Tickets = await ethers.getContractFactory('ArmenianLeagueTickets');
+    tickets = await Tickets.deploy(token.address);
 
-    const setGreetingTx = await greeter.setGreeting("Hola, mundo!");
+    singer = await ethers.getSigners();
+    [owner, address1, address2] = await ethers.getSigners();
+  });
 
-    // wait until the transaction is mined
-    await setGreetingTx.wait();
+  describe("Deployment", async () => {
 
-    expect(await greeter.greet()).to.equal("Hola, mundo!");
+
+    it("TotalSupply supply should be equal owner balance", async () => {
+      const ownerBalance = await token.balanceOf(owner.address);
+      expect(await token.totalSupply()).to.equal(ownerBalance)
+    });
+
+    it("Should change sold amount, balance and owner ticket count after mintByUSDT", async () => {
+      const amounts = [1, 2, 3, 10];
+      const ticketNumber = 3;
+
+      for (let i = 0; i< amounts.length; i++) {
+        const amount = amounts[i];
+        const costUSDC = parseInt(await tickets.USDCCost(), 10);
+
+        const startBalanceOfOwner = parseInt(await token.balanceOf(owner.address), 10);
+        const startOwnerTicketAmount = parseInt(await tickets.balanceOfBatch([owner.address], [ticketNumber]), 10);
+        const startSoldTickets = await tickets.balanceOfTickets();
+
+        const transactionApprove = await token.connect(owner)
+          .approve(tickets.address, amount * costUSDC)
+        await transactionApprove.wait();
+        const transactionMint = await tickets.connect(owner).mintByUSDC(owner.address, ticketNumber, amount);
+        await transactionMint.wait();
+
+        const balanceOfOwner = parseInt(await token.balanceOf(owner.address), 10);
+        const ownerTicketAmount = parseInt(await tickets.balanceOfBatch([owner.address], [ticketNumber]), 10);
+        const soldTickets = await tickets.balanceOfTickets();
+
+        expect(ownerTicketAmount).to.equal(startOwnerTicketAmount + amount);
+        expect(balanceOfOwner).to.equal(startBalanceOfOwner - amount * costUSDC);
+        expect(parseInt(soldTickets[ticketNumber], 10)).to.equal(parseInt(startSoldTickets[ticketNumber], 10) + amount);
+    }
+  });
+
   });
 });

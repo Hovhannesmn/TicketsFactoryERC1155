@@ -7,7 +7,7 @@ require("dotenv").config();
 
 module.exports = {
   solidity: "0.8.14",
-  defaultNetwork: "rinkeby",
+  defaultNetwork: "localhost",
   paths: {
     artifacts: "./src/artifacts",
     sources: "./contracts",

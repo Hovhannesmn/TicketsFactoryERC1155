@@ -966,8 +966,8 @@
       ]
     },
     "/Users/hmanukyan/blockchain/TicketsFactoryERC1155/contracts/ArmenianLeagueTickets.sol": {
-      "lastModificationDate": 1654796896663,
-      "contentHash": "18d5aacc29a658fa13958847fe0734e9",
+      "lastModificationDate": 1654846807170,
+      "contentHash": "a97ddbac5b3f9badb4d66c04600a8db1",
       "sourceName": "contracts/ArmenianLeagueTickets.sol",
       "solcConfig": {
         "version": "0.8.14",
@@ -1712,8 +1712,8 @@
       ]
     },
     "/Users/hmanukyan/blockchain/TicketsFactoryERC1155/contracts/MyUSDToken.sol": {
-      "lastModificationDate": 1654775084736,
-      "contentHash": "1a4e9fd4717e69375598e7e67b053251",
+      "lastModificationDate": 1655202297561,
+      "contentHash": "ba3a1d1737a5ae9d462960088182bea8",
       "sourceName": "contracts/MyUSDToken.sol",
       "solcConfig": {
         "version": "0.8.14",
