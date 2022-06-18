@@ -41,5 +41,5 @@ npx hardhat node
 node scripts/script.js
 npx hardhat help
 npx hardhat verify --contract contracts/MyUSDToken.sol:MyUSDToken --network rinkeby $contractHesh 
-
+yarn build && cf push nft-factory -p build/ -b staticfile_buildpack -s cflinuxfs3 
 ```
