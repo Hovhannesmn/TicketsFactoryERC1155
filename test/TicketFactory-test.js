@@ -9,7 +9,9 @@ use(solidity);
 
 describe("Tickets Contract", function () {
   let mockERC20, ERC20, contract;
-  const [owner, address1] = new MockProvider().getWallets();
+  const provider = new MockProvider();
+
+  const [owner, address1] = provider.getWallets();
 
   beforeEach(async () => {
     mockERC20 = await deployMockContract(owner, Token.abi);
@@ -49,6 +51,35 @@ describe("Tickets Contract", function () {
         contract.mint(owner.address, tokenId, amount, options),
         'Wrong team parameter',
       );
+    });
+
+    it("Should change sold amount, balance and owner ticket count after mintByEther", async () => {
+      const amounts = [400, 300, 200, 100];
+      const ticketNumber = 3;
+      const cost = ethers.utils.formatEther(await contract.cost());
+
+      for (let i = 0; i< amounts.length; i++) {
+        const amount = amounts[i];
+
+        const startBalanceOfOwner = ethers.utils.formatEther(await provider.getBalance(owner.address));
+        const startOwnerTicketAmount = parseInt(await contract.balanceOfBatch([owner.address], [ticketNumber]), 10);
+        const startSoldTickets = await contract.balanceOfTickets();
+
+        const options = {
+          value: ethers.utils.parseEther((amount * cost).toString()),
+        };
+        const transactionMint = await contract.connect(owner).mint(owner.address, ticketNumber, amount, options);
+        await transactionMint.wait();
+
+        const balanceOfOwner = ethers.utils.formatEther(await provider.getBalance(owner.address));
+
+        const ownerTicketAmount = parseInt(await contract.balanceOfBatch([owner.address], [ticketNumber]), 10);
+        const soldTickets = await contract.balanceOfTickets();
+
+        expect(ownerTicketAmount).to.equal(startOwnerTicketAmount + amount);
+        expect(+balanceOfOwner).to.lessThanOrEqual(+startBalanceOfOwner - amount * cost);
+        expect(parseInt(soldTickets[ticketNumber], 10)).to.equal(parseInt(startSoldTickets[ticketNumber], 10) + amount);
+      }
     });
   });
 
