@@ -8,8 +8,9 @@ const Tickets = require('../src/artifacts/contracts/ArmenianLeagueTickets.sol/Ar
 use(solidity);
 
 describe("Tickets Contract", function () {
-  let mockERC20, ERC20, contract;
+  let mockERC20, ERC20, contract, cost;
   const provider = new MockProvider();
+
 
   const [owner, address1] = provider.getWallets();
 
@@ -17,6 +18,7 @@ describe("Tickets Contract", function () {
     mockERC20 = await deployMockContract(owner, Token.abi);
     ERC20 = await deployContract(owner, Token);
     contract = await deployContract(owner, Tickets, [mockERC20.address]);
+    cost = ethers.utils.formatEther(await contract.cost());
   });
 
   describe("Deployment with mock Token contract", async () => {
@@ -29,7 +31,7 @@ describe("Tickets Contract", function () {
       const tokenId = 0
       const amount = 500;
       const options = {
-        value: ethers.utils.parseEther((parseInt(amount) * 0.01).toString()),
+        value: ethers.utils.parseEther((parseInt(amount) * cost).toString()),
       };
 
       await contract.mint(owner.address, tokenId, amount, options);
@@ -44,7 +46,7 @@ describe("Tickets Contract", function () {
       const tokenId = 13
       const amount = 500;
       const options = {
-        value: ethers.utils.parseEther((parseInt(amount) * 0.01).toString()),
+        value: ethers.utils.parseEther((parseInt(amount) * cost).toString()),
       };
 
       await expectRevert(
@@ -56,7 +58,6 @@ describe("Tickets Contract", function () {
     it("Should change sold amount, balance and owner ticket count after mintByEther", async () => {
       const amounts = [400, 300, 200, 100];
       const ticketNumber = 3;
-      const cost = ethers.utils.formatEther(await contract.cost());
 
       for (let i = 0; i< amounts.length; i++) {
         const amount = amounts[i];
@@ -80,6 +81,22 @@ describe("Tickets Contract", function () {
         expect(+balanceOfOwner).to.lessThanOrEqual(+startBalanceOfOwner - amount * cost);
         expect(parseInt(soldTickets[ticketNumber], 10)).to.equal(parseInt(startSoldTickets[ticketNumber], 10) + amount);
       }
+    });
+
+    it("Should fail when amount is not equal cost", async () => {
+      const wallet = provider.createEmptyWallet();
+      const tokenId = 0
+      const amount = 100;
+
+      const costEth = parseInt(amount) * cost;
+      const options = {
+        value: ethers.utils.parseEther((costEth - 1).toString()),
+      };
+
+      await expectRevert(
+        contract.connect(wallet).mint(wallet.address, tokenId, amount, options),
+        'amount should be equal cost'
+      );
     });
   });
 
@@ -115,5 +132,19 @@ describe("Tickets Contract", function () {
         expect(parseInt(soldTickets[ticketNumber], 10)).to.equal(parseInt(startSoldTickets[ticketNumber], 10) + amount);
       }
     });
-  })
+
+    it("Should fail when sender does not have enough funds to send tx", async () => {
+      const wallet = provider.createEmptyWallet();
+      const tokenId = 0
+      const amount = 500;
+      const options = {
+        value: ethers.utils.parseEther((parseInt(amount) * cost).toString()),
+      };
+
+      await expectRevert(
+        contract.connect(wallet).mint(wallet.address, tokenId, amount, options),
+        'sender doesn\'t have enough funds to send tx. The upfront cost is: 5000144578000000000 and the sender\'s account only has: 0'
+      );
+    });
+  });
 });
