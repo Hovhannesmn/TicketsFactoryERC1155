@@ -5,6 +5,8 @@ require('@nomiclabs/hardhat-waffle');
 require('@nomiclabs/hardhat-etherscan');
 require("dotenv").config();
 
+const {PRIVATE_KEY, PRIVATE_KEY_SECONDARY, ETHER_SCAN_TOKEN} = process.env;
+
 module.exports = {
   solidity: "0.8.14",
   defaultNetwork: "localhost",
@@ -20,7 +22,7 @@ module.exports = {
     },
     rinkeby: {
       url: "https://eth-rinkeby.alchemyapi.io/v2/VQu1SPhPXOGss4gbh_NuIPcRvadikkpo",
-      accounts: [`0x${'fbccbe2e52936444c1818f5307f1fd1501650dce75ae821f2c073ca6727ae11a'}`, `0x${'59a9abbbc73ae5f2206eda3c24e30aa7ccc28bababcb82b3f83a51a9329f4449'}`]
+      accounts: [`0x${PRIVATE_KEY}`, `0x${PRIVATE_KEY_SECONDARY}`]
     },
     localhost: {
       url: "http://localhost:8545",
@@ -28,6 +30,6 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: "NNCF3K536PGUC28CGJUXA7WYXHS8SGNQ82"
+    apiKey: ETHER_SCAN_TOKEN
   }
 };

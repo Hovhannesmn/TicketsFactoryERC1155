@@ -14,18 +14,16 @@ contract ArmenianLeagueTickets is ERC1155, Ownable {
     uint256 public USDCCost = 30;
     uint private constant MAX_TEAM_ID = 9;
     uint256 public MAX_TICKET_NUMBER = 1000;
-    uint public rate = 100;
     MyUSDToken public mysUSDToken;
     mapping(uint64 => uint256) private ticketBalances;
 
-    event TokenPurchased(
-        address account,
-        address token,
-        uint amount,
-        uint rate
-    );
+    event ReceivedPurchase(address caller, uint amount, string message);
 
     mapping(uint => string) public tokenURI;
+
+    receive() external payable {
+        emit ReceivedPurchase(msg.sender, msg.value, "buy tickets with Ether success");
+    }
 
     function balanceTickets(uint64 _id) public view returns (uint256) {
         return ticketBalances[_id];

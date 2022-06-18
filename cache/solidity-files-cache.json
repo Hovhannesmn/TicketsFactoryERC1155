@@ -966,8 +966,8 @@
       ]
     },
     "/Users/hmanukyan/blockchain/TicketsFactoryERC1155/contracts/ArmenianLeagueTickets.sol": {
-      "lastModificationDate": 1655205793990,
-      "contentHash": "c960d1a0a5ba00ae7b0853759b8bdec9",
+      "lastModificationDate": 1655553747150,
+      "contentHash": "aa7aee77f4345797dc23de230a2f2e35",
       "sourceName": "contracts/ArmenianLeagueTickets.sol",
       "solcConfig": {
         "version": "0.8.14",

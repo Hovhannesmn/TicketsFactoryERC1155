@@ -26,7 +26,7 @@
     "deploy": "npx hardhat run scripts/deploy.mjs --network rinkeby",
     "deploy:tickets": "npx hardhat run scripts/deploy-only-tickets.mjs --network rinkeby",
     "deploy-dev": "npx hardhat run scripts/deploy-ticket-dev.mjs --network localhost",
-    "ipfs1155": "node utils/metadataERC1155Generator.mjs",
+    "ipfs-generator": "node utils/metadataERC1155Generator.mjs",
     "verify": "node scripts/verify-contract.mjs",
     "build": "react-scripts build",
     "test": "hardhat test",
