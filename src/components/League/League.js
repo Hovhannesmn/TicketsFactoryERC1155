@@ -10,7 +10,7 @@ import ArmenianLeagueTicketsFactoryDev from "../../ArmenianLeagueTicketsFactory.
 
 function League() {
   const [contractData, setContractData] = useState({
-    owner: '',
+    userAddress: '',
     token: {},
     contract: {},
     provider: {},
@@ -27,7 +27,7 @@ function League() {
   });
   const [error, setError] = useState("");
 
-  const {token, contract, owner, networkName, provider} = contractData;
+  const {token, contract, ownerAddress, userAddress, networkName, provider} = contractData;
   const {cost, costUSDC, balance, USDCBalance, soldByUSDCBalance, ticketCounts, soldTickets} = contractInfo;
 
   const mintByUSDC = async (id) => {
@@ -45,7 +45,7 @@ function League() {
       const uri = await contract.uri(id)
       const transactionApprove = await token.approve(ArmenianLeagueTicketsFactoryRinkeby.address, amount[id] * costUSDC);
       await transactionApprove.wait();
-      const transaction = await contract.mintByUSDC(owner, id, amount[id]);
+      const transaction = await contract.mintByUSDC(userAddress, id, amount[id]);
       await transaction.wait();
       const log = await provider.getTransactionReceipt(transaction.hash);
 
@@ -76,10 +76,10 @@ function League() {
     try {
       const options = {
         value: ethers.utils.parseEther((parseInt(amount[id]) * 0.01).toString()),
-        // from: owner //@TODO when need to change owner msg.from address
+        // from: userAddress //@TODO when need to change owner msg.from address
       };
       const uri = await contract.uri(id)
-      const transaction = await contract.mint(owner, id, amount[id], options);
+      const transaction = await contract.mint(userAddress, id, amount[id], options);
       await transaction.wait();
       const log = await provider.getTransactionReceipt(transaction.hash);
 
@@ -110,22 +110,21 @@ function League() {
         singer
       );
 
-
       const token = new ethers.Contract(
         MyUSDToken.address,
         MyUSDToken.abi,
         singer
       );
 
-      // const trans = await TokenContract.transfer(TokenContract.address, 1000000);
-      // await trans.wait();
+      const owner = await contract.owner();
 
       setContractData({
         contract,
         token,
         provider,
         networkName: network.name,
-        owner: data[0],
+        userAddress: data[0],
+        ownerAddress: owner,
       });
 
       await updateContractInfo(provider, token, contract, data[0]);
@@ -138,20 +137,20 @@ function League() {
     provider = contractData.provider,
     token = contractData.token,
     contract = contractData.contract,
-    owner = contractData.owner,
+    userAddress = contractData.userAddress,
   ) => {
-    const senderUSDCBalance = await token.balanceOf(owner);
+    const senderUSDCBalance = await token.balanceOf(userAddress);
     const soldByUSDCBalance = await token.balanceOf(ArmenianLeagueTicketsFactoryRinkeby.address);
 
     const batches = await contract.balanceOfBatch(
-      Array(10).fill(owner),
+      Array(10).fill(userAddress),
       Array.from({ length: 10 }, (v, k) => k)
     );
 
     const soldTickets = await contract.balanceOfTickets();
     const costHexadecimal = await contract.cost();
     const costUSDCHexadecimal = await contract.USDCCost();
-    const balance = await provider.getBalance(owner);
+    const balance = await provider.getBalance(userAddress);
 
     setContractInfo({
       cost: ethers.utils.formatEther(costHexadecimal),
@@ -240,7 +239,11 @@ function League() {
         }
         </tbody>
       </table>
-      <button className="buttonSuccess" onClick={withdraw} > withdraw </button>
+      {
+        +ownerAddress === +userAddress
+          ? <button className="buttonSuccess" onClick={withdraw} > withdraw </button>
+          : null
+      }
     </div>
   );
 }
